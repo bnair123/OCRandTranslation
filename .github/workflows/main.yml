@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,15 +18,15 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: OCRApp-Linux
-            build_command: pyinstaller --onefile --windowed --strip --upx main.py
+            build_command: pyinstaller --onefile --windowed --strip --upx-dir=/usr/bin/upx main.py
             exe_name: dist/main
           - os: windows-latest
             artifact_name: OCRApp-Windows
-            build_command: pyinstaller --onefile --windowed --noconsole --clean --strip --upx main.py
+            build_command: pyinstaller --onefile --windowed --noconsole --clean --strip main.py
             exe_name: dist/main.exe
           - os: macos-latest
             artifact_name: OCRApp-Mac
-            build_command: pyinstaller --onefile --windowed --strip --upx main.py
+            build_command: pyinstaller --onefile --windowed --strip --upx-dir=/usr/local/bin/upx main.py
             exe_name: dist/main
 
     steps:
@@ -61,11 +61,16 @@ jobs:
           preload_reader(['en', 'de'])  # English - German
           "
 
+      - name: Install UPX (for compression) on Linux & macOS
+        if: matrix.os != 'windows-latest'
+        run: |
+          sudo apt-get install -y upx || brew install upx
+
       - name: Build Executable
         run: ${{ matrix.build_command }}
 
       - name: Upload Executable as Artifact
-        uses: actions/upload-artifact@v4 
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.exe_name }}
