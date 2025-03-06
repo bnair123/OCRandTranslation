@@ -1,0 +1,71 @@
+name: Build OCR App
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: OCRApp-Linux
+            build_command: pyinstaller --onefile --windowed --strip --upx main.py
+            exe_name: dist/main
+          - os: windows-latest
+            artifact_name: OCRApp-Windows
+            build_command: pyinstaller --onefile --windowed --noconsole --clean --strip --upx main.py
+            exe_name: dist/main.exe
+          - os: macos-latest
+            artifact_name: OCRApp-Mac
+            build_command: pyinstaller --onefile --windowed --strip --upx main.py
+            exe_name: dist/main
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Preload EasyOCR Models (with correct language pairs)
+        run: |
+          python -c "
+          import easyocr;
+          def preload_reader(langs):
+              try:
+                  reader = easyocr.Reader(langs, gpu=False)
+                  print(f'Models for {langs} downloaded successfully.')
+              except ValueError as e:
+                  print(f'Error downloading {langs}: {e}')
+
+          # Correct Language Pairs
+          preload_reader(['en', 'tr'])   # English - Turkish
+          preload_reader(['en', 'ch_sim'])  # English - Simplified Chinese
+          preload_reader(['en', 'ja'])  # English - Japanese
+          preload_reader(['en', 'de'])  # English - German
+          "
+
+      - name: Build Executable
+        run: ${{ matrix.build_command }}
+
+      - name: Upload Executable as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.exe_name }}
