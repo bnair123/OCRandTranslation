@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -41,7 +41,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt  # Install from your requirements.txt
 
       - name: Preload EasyOCR Models (with correct language pairs)
         run: |
@@ -65,7 +65,7 @@ jobs:
         run: ${{ matrix.build_command }}
 
       - name: Upload Executable as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.exe_name }}
