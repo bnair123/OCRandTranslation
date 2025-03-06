@@ -1,0 +1,7 @@
+easyocr
+pandas
+PyMuPDF
+google-generativeai
+certifi
+customtkinter
+pyinstaller
